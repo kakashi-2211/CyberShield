@@ -1,0 +1,401 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CyberShield | Website Security Scanner</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+
+            <div class="brand">
+                <div class="brand-icon">C</div>
+
+                <div>
+                    <h2>CyberShield</h2>
+                    <p>Website Security</p>
+                </div>
+            </div>
+
+            <nav class="navigation">
+                <a href="/" class="nav-link active">
+                    <span>⌂</span>
+                    Dashboard
+                </a>
+
+                <a href="#scanner" class="nav-link">
+                    <span>◎</span>
+                    Website Scanner
+                </a>
+
+                <a href="#results" class="nav-link">
+                    <span>▤</span>
+                    Scan Results
+                </a>
+
+                <a href="#about" class="nav-link">
+                    <span>ⓘ</span>
+                    About
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <p>CyberShield</p>
+                <small>Academic Security Project</small>
+            </div>
+
+        </aside>
+
+
+        <!-- MAIN CONTENT -->
+        <main class="main">
+
+            <!-- TOP BAR -->
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">SECURITY DASHBOARD</p>
+                    <h1>Website Scanner</h1>
+                </div>
+
+                <div class="status-badge">
+                    <span class="status-dot"></span>
+                    Scanner Ready
+                </div>
+            </header>
+
+
+            <!-- INTRODUCTION -->
+            <section class="welcome-section">
+                <h2>Check your website's security</h2>
+
+                <p>
+                    Analyse HTTPS usage, HTTP security headers,
+                    and response time using CyberShield.
+                </p>
+            </section>
+
+
+            <!-- SCANNER FORM -->
+            <section class="scanner-panel" id="scanner">
+
+                <div class="section-heading">
+                    <div>
+                        <h2>Start a Security Scan</h2>
+
+                        <p>
+                            Enter a public website URL to inspect
+                            its basic security configuration.
+                        </p>
+                    </div>
+
+                    <div class="panel-icon">⌕</div>
+                </div>
+
+                <form method="POST" action="/" class="scanner-form">
+
+                    <label for="website">Website URL</label>
+
+                    <div class="input-row">
+
+                        <input
+                            type="text"
+                            id="website"
+                            name="website"
+                            placeholder="https://example.com"
+                            value="{{ website | default('', true) }}"
+                            required
+                        >
+
+                        <button type="submit">
+                            Scan Website
+                        </button>
+
+                    </div>
+
+                    <p class="input-help">
+                        Example: https://example.com
+                    </p>
+
+                </form>
+
+            </section>
+
+
+            <!-- RESULTS -->
+            {% if result %}
+
+            <section class="results-section" id="results">
+
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">SCAN REPORT</p>
+                        <h2>Scan Results</h2>
+                    </div>
+
+                    {% if result.success %}
+                    <span class="result-badge success-badge">
+                        Scan Completed
+                    </span>
+                    {% else %}
+                    <span class="result-badge error-badge">
+                        Scan Failed
+                    </span>
+                    {% endif %}
+                </div>
+
+
+                <!-- SUCCESSFUL SCAN -->
+                {% if result.success %}
+
+                <div class="result-overview">
+
+                    <!-- SCORE -->
+                    <div class="score-card">
+
+                        <p class="card-label">Security Score</p>
+
+                        <div
+                            class="score-ring"
+                            style="--score: {{ result.score }};"
+                        >
+                            <div class="score-inner">
+
+                                <span class="score-number">
+                                    {{ result.score }}
+                                </span>
+
+                                <span class="score-total">
+                                    out of 100
+                                </span>
+
+                            </div>
+                        </div>
+
+                        <h3>{{ result.rating }}</h3>
+
+                        <p class="score-description">
+                            Based on CyberShield's scoring rules.
+                        </p>
+
+                    </div>
+
+
+                    <!-- WEBSITE INFORMATION -->
+                    <div class="website-card">
+
+                        <h3>Website Information</h3>
+
+                        <div class="info-row">
+                            <span>Website</span>
+
+                            <strong class="url-value">
+                                {{ result.final_url }}
+                            </strong>
+                        </div>
+
+                        <div class="info-row">
+                            <span>HTTP Status Code</span>
+
+                            <strong>
+                                {{ result.status_code }}
+                            </strong>
+                        </div>
+
+                        <div class="info-row">
+                            <span>Response Time</span>
+
+                            <strong>
+                                {{ result.response_time }} seconds
+                            </strong>
+                        </div>
+
+                        <div class="info-row">
+                            <span>HTTPS Enabled</span>
+
+                            {% if result.https_enabled %}
+                            <strong class="text-success">Yes</strong>
+                            {% else %}
+                            <strong class="text-danger">No</strong>
+                            {% endif %}
+                        </div>
+
+                        <div class="info-row">
+                            <span>Headers Detected</span>
+
+                            <strong>
+                                {% set count = namespace(value=0) %}
+                                {% for name, data in result.headers.items() %}
+                                    {% if data.present %}
+                                        {% set count.value = count.value + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ count.value }} / {{ result.headers|length }}
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SECURITY HEADERS -->
+                <div class="headers-section">
+
+                    <div class="section-heading">
+                        <div>
+                            <h2>HTTP Security Headers</h2>
+
+                            <p>
+                                Headers detected in the website response.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="headers-grid">
+
+                        {% for name, data in result.headers.items() %}
+
+                        <article class="header-card">
+
+                            <div class="header-card-top">
+
+                                <h3>{{ name }}</h3>
+
+                                {% if data.present %}
+                                <span class="header-status present">
+                                    Present
+                                </span>
+                                {% else %}
+                                <span class="header-status missing">
+                                    Missing
+                                </span>
+                                {% endif %}
+
+                            </div>
+
+                            <p class="header-description">
+                                {{ data.description }}
+                            </p>
+
+                            <div class="header-meta">
+                                <span class="severity-label">
+                                    Severity: {{ data.severity }}
+                                </span>
+                            </div>
+
+                            {% if data.present %}
+
+                            <div class="header-value">
+                                <span>Detected Value</span>
+
+                                <code>{{ data.value }}</code>
+                            </div>
+
+                            {% else %}
+
+                            <p class="missing-note">
+                                This header was not found in the response.
+                            </p>
+
+                            {% endif %}
+
+                        </article>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- SCAN NOTE -->
+                <div class="notice-panel">
+                    <strong>Important:</strong>
+
+                    A missing security header does not automatically
+                    mean a website is vulnerable. This report checks
+                    selected response headers and basic connection
+                    information only. It is not a full penetration test.
+                </div>
+
+
+                <!-- FAILED SCAN -->
+                {% else %}
+
+                <div class="error-panel">
+
+                    <div class="error-icon">!</div>
+
+                    <div>
+                        <h3>Unable to complete the scan</h3>
+
+                        <p>{{ result.message }}</p>
+
+                        <p class="error-help">
+                            Check the URL and try again. The website
+                            may be unavailable or may have a connection
+                            or certificate problem.
+                        </p>
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+            </section>
+
+            {% endif %}
+
+
+            <!-- ABOUT -->
+            <section class="about-section" id="about">
+
+                <p class="eyebrow">ABOUT THE PROJECT</p>
+
+                <h2>About CyberShield</h2>
+
+                <p>
+                    CyberShield is an academic project developed
+                    using Python, Flask, HTML, and CSS. It checks
+                    selected HTTP security headers, HTTPS usage,
+                    HTTP response status, and response time.
+                </p>
+
+                <p>
+                    The security score is a custom educational
+                    indicator and should not be treated as an
+                    official security rating.
+                </p>
+
+            </section>
+
+
+            <!-- FOOTER -->
+            <footer class="footer">
+
+                <p>
+                    CyberShield · Academic Project
+                </p>
+
+                <p>
+                    For educational use only
+                </p>
+
+            </footer>
+
+        </main>
+
+    </div>
+
+</body>
+</html>
